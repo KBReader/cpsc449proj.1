@@ -2,3 +2,4 @@
 
 Kevin Byon   kbyon@csu.fullerton.edu
 Johnny Quach JqJohnny@csu.fullerton.edu
+Jeevan Gowda jeevangowda@csu.fullerton.edu
