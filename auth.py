@@ -35,6 +35,9 @@ def login():
     username = data.get('username')
     password = data.get('password')
 
+    if username == None or password == None:
+        return jsonify({'message': 'Username or password missing'}), 412
+
     user = User.query.filter_by(username=username).first()
 
     if not user or not user.check_password(password):
