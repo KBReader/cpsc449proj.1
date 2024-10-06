@@ -90,3 +90,54 @@ def update_rating(rating_id):
     rating.draft = new_draft #key to updating
     db.session.commit()
     return jsonify({'message': 'Rating ID has been updated'}), 200
+
+@app.route('/movies/<movie_id>/ratings', methods = ['GET'])
+@login_required
+def retrieve_aRate(movie_id):
+
+    movie = Movie.query.get(movie_id)
+
+    if not movie:
+        return jsonify({'message': 'The movie is not found'}), 404
+
+    rating = Rating.query.filer_by(movie_id = movie_id).all()
+    rating_list = [rating.to_dict() for rating in ratings]
+    return jsonify(rating_list), 200
+
+@app.route('/movies/<movie_id>/ratings', methods = ['POST'])
+@login_required
+def submint_rate(movie_id):
+
+    movie = Movie.query.get(movie_id)
+
+    if not movie:
+        return jsonify({'message': 'The movie is not found'}), 404
+    
+    data = request.get_json()
+    score = data.get('score')
+    comment = data.get('comment')
+
+    if score is None or not (1 <= score <= 10):
+        return jsonify({'message': 'Invalid score: must be between 1 to 10'}), 400
+
+    rating = Rating{
+        score = score,
+        comment = comment,
+        movie_id = movie_id,
+        user_id = current_user.id
+    }
+ 
+    db.session.add(rating)
+    db.session.commit()
+
+    return jsonify({'message': 'Rating posted successfully','rating': rating.to_dict()}), 201
+
+UPLOAD_FOLDER = './uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+
+if __name__= '__main__':
+    app.run(debug = True)
