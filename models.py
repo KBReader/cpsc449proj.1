@@ -1,3 +1,5 @@
+# This file handles creating the database tables with their relationships.
+# Also includes password hashing.
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -13,7 +15,7 @@ class Base(DeclarativeBase):
 db = SQLAlchemy()
 
 class User(db.Model):
-    __tablename__ = 'users'  # Explicit table name
+    __tablename__ = 'users'
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     username: Mapped[str] = mapped_column(db.String, unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -26,7 +28,7 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
 class Movie(db.Model):
-    __tablename__ = 'movies'  # Explicit table name
+    __tablename__ = 'movies'
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     title: Mapped[str] = mapped_column(db.String, nullable=False)
     description: Mapped[str] = mapped_column(db.Text)
@@ -34,7 +36,7 @@ class Movie(db.Model):
     ratings = relationship('Rating', back_populates='movie')
 
 class Rating(db.Model):
-    __tablename__ = 'ratings'  # Explicit table name
+    __tablename__ = 'ratings'
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     score: Mapped[int] = mapped_column(db.Integer, nullable=False)
     
@@ -61,21 +63,6 @@ def initialize_database(app):
 
     with app.app_context():
         db.create_all()
-
-    #db.session.add(User(username="examples", admin=True))
-    # db.session.commit()
-
-    # users = db.session.execute(db.select(User)).scalars()
-
-# @app.route('/check_db', methods=['POST'])
-# def check_db_connection():
-#     try:
-#         # Establish a connection and execute a simple query using the connection
-#         with db.engine.connect() as connection:
-#             connection.execute(text('SELECT 1'))
-#         return "PostgreSQL connection is working."
-#     except OperationalError:
-#         return "Failed to connect to PostgreSQL."
 
 if __name__ == '__main__':
     app.run(debug=True)
