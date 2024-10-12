@@ -31,7 +31,7 @@ class Movie(db.Model):
     __tablename__ = 'movies'
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     title: Mapped[str] = mapped_column(db.String, nullable=False)
-    description: Mapped[str] = mapped_column(db.Text)
+    description: Mapped[str] = mapped_column(db.Text, nullable=True)
 
     ratings = relationship('Rating', back_populates='movie')
 
