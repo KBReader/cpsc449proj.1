@@ -48,7 +48,7 @@ class Rating(db.Model):
     movie = relationship('Movie', back_populates='ratings')
 
 class File(db.Model):
-    __tablename__ = 'files'  # Explicit table name
+    __tablename__ = 'files'
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     filename: Mapped[str] = mapped_column(db.String, nullable=False)
     user_id: Mapped[int] = mapped_column(db.Integer, db.ForeignKey('users.id'), nullable=False)

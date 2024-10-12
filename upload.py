@@ -10,7 +10,7 @@ def upload_file():
     
     file = request.files['file']
 
-    if file.filename = '':
+    if file.filename == '':
         return jsonify({'message': 'File is not selected'}), 400
 
     if file:

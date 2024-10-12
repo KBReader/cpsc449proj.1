@@ -1,24 +1,33 @@
-from flask import Flask,request,jsonify
+import os
+
+from flask import Blueprint, Flask, jsonify, request
+
+from auth import admin_required, login_required
+from models import Movie, Rating, User, db
 
 app = Flask(__name__)
 app.debug = True
 
-@app.route('/movies', methods=['POST'])
+movies_blueprint = Blueprint('movies', __name__)  # Define a Blueprint for movies
+
+@movies_blueprint.route('/movies', methods=['POST'])
 @admin_required
 def add_movie():
     data = request.get_json()
     title = data.get('title')
+    description = data.get('description')
+
 
     if Movie.query.filter_by(title=title).first():
         return jsonify({'message': 'Movie already exists'}), 409
 
-        new_movie = Movie(title=title)
-        db.session.add(new_movie)
-        db.session.commit()
+    new_movie = Movie(title=title, description=description)
+    db.session.add(new_movie)
+    db.session.commit()
 
-        return jsonify({'message': 'Movie added successfully'}), 201
+    return jsonify({'message': 'Movie added successfully'}), 201
     
-@app.route('/movies/<movie_id>', methods=['DELETE'])
+@movies_blueprint.route('/movies/<movie_id>', methods=['DELETE'])
 @admin_required
 def delete_movie(movie_id):
     movie = Movie.query.get(movie_id)
@@ -31,19 +40,19 @@ def delete_movie(movie_id):
     return jsonify({'message': 'Movie ID deleted successfully'}), 200
 
 
-@app.route('/admin/ratings/<rating_id>', methods=['DELETE'])
-@admin_required
-def delete_rating(rating_id):
-    rating = Rating.query.get(rating_id)
-    if not rating:
-        return jsonify({'message': 'Rating ID not found'}), 404
+# @movies_blueprint.route('/admin/ratings/<rating_id>', methods=['DELETE'])
+# @admin_required
+# def delete_rating(rating_id):
+#     rating = Rating.query.get(rating_id)
+#     if not rating:
+#         return jsonify({'message': 'Rating ID not found'}), 404
     
-    db.session.delete(rating)
-    db.session.commit()
+#     db.session.delete(rating)
+#     db.session.commit()
     
-    return jsonify({'message': 'Rating ID deleted succesfully'}), 200
+#     return jsonify({'message': 'Rating ID deleted succesfully'}), 200
 
-@app.route('/ratings/<rating_id>', methods=['DELETE'])
+@movies_blueprint.route('/ratings/<rating_id>', methods=['DELETE'])
 @login_required
 def delete_rating(rating_id, user_id):
     rating = Rating.query.get(rating_id)
@@ -56,24 +65,24 @@ def delete_rating(rating_id, user_id):
     if rating.user_id != user_id:
         return jsonify({'message': 'The rating ID is not posted by you'}), 403
     
-    de.session.delete(rating)
+    db.session.delete(rating)
     db.session.commit()
     return jsonify({'message': 'Rating ID deleted succesfully'}), 200
 
 # retrieves all ratings from all users
-@app.route('/ratings', methods =['GET'])
+@movies_blueprint.route('/ratings', methods =['GET'])
 @login_required
 def fetchall_ratings():
     ratings = db.session.scalars(db.select(Rating)).all() #does .fetchall or .all works?
     rating_list = [rating.to_dict() for rating in ratings]
     return jsonify(rating_list)
 
-@app.route('/ratings/<rating_id>', methods =['PUT'])
+@movies_blueprint.route('/ratings/<rating_id>', methods =['PUT'])
 @login_required
 def update_rating(rating_id):
 
     rating = Rating.query.get(rating_id)
-    user_id = current_user.id
+    #user_id = user.id
 
     if not rating:
         return jsonify ({'message': 'Rating ID not found'}), 404
@@ -91,7 +100,7 @@ def update_rating(rating_id):
     db.session.commit()
     return jsonify({'message': 'Rating ID has been updated'}), 200
 
-@app.route('/movies/<movie_id>/ratings', methods = ['GET'])
+@movies_blueprint.route('/movies/<movie_id>/ratings', methods = ['GET'])
 @login_required
 def retrieve_aRate(movie_id):
 
@@ -104,7 +113,7 @@ def retrieve_aRate(movie_id):
     rating_list = [rating.to_dict() for rating in ratings]
     return jsonify(rating_list), 200
 
-@app.route('/movies/<movie_id>/ratings', methods = ['POST'])
+@movies_blueprint.route('/movies/<movie_id>/ratings', methods = ['POST'])
 @login_required
 def submint_rate(movie_id):
 
@@ -120,12 +129,12 @@ def submint_rate(movie_id):
     if score is None or not (1 <= score <= 10):
         return jsonify({'message': 'Invalid score: must be between 1 to 10'}), 400
 
-    rating = Rating{
+    rating = Rating(
         score = score,
         comment = comment,
         movie_id = movie_id,
-        user_id = current_user.id
-    }
+        #user_id = current_user.id
+    )
  
     db.session.add(rating)
     db.session.commit()
@@ -139,5 +148,5 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 
-if __name__= '__main__':
+if __name__ == '__main__':
     app.run(debug = True)

@@ -1,7 +1,10 @@
 import os
+
 from flask import Flask
+
 from auth import auth_blueprint
 from models import initialize_database
+from movie_control import movies_blueprint
 
 app = Flask(__name__)
 
@@ -18,6 +21,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
 app.register_blueprint(auth_blueprint, url_prefix='/auth')
+app.register_blueprint(movies_blueprint)
+
 
 # Ensure the database is initialized before starting the app
 if __name__ == '__main__':
