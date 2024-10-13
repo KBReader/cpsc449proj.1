@@ -84,7 +84,7 @@ def fetchall_ratings(user_token):
         for rating in ratings:
             ratings_dict[movie.title].append(rating.to_dict())
 
-    return jsonify(ratings_dict)
+    return jsonify(ratings_dict), 200
 
 @movies_blueprint.route('/ratings/<rating_id>', methods =['PUT'])
 @login_required
@@ -109,18 +109,18 @@ def update_rating(rating_id):
     db.session.commit()
     return jsonify({'message': 'Rating ID has been updated'}), 200
 
-@movies_blueprint.route('/movies/<movie_id>/ratings', methods = ['GET'])
+@movies_blueprint.route('/movies/ratings/<movie_id>', methods = ['GET'])
 @login_required
-def retrieve_aRate(movie_id):
+def retrieve_aRate(movie_id, user_token):
 
     movie = Movie.query.get(movie_id)
 
     if not movie:
         return jsonify({'message': 'The movie is not found'}), 404
 
-    rating = Rating.query.filer_by(movie_id = movie_id).all()
+    ratings = Rating.query.filter_by(movie_id=movie_id)
     rating_list = [rating.to_dict() for rating in ratings]
-    return jsonify(rating_list), 200
+    return jsonify({movie.title: rating_list}), 200
 
 @movies_blueprint.route('/movies/ratings/<movie_id>', methods = ['POST'])
 @login_required
