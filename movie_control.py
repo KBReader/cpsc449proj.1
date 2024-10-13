@@ -27,7 +27,7 @@ def add_movie():
 
     return jsonify({'message': 'Movie added successfully'}), 201
     
-@movies_blueprint.route('/movies/<movie_id>', methods=['DELETE'])
+@movies_blueprint.route('/movies/<movie_id>', methods=['DELETE']) #technically not a required api
 @admin_required
 def delete_movie(movie_id):
     movie = Movie.query.get(movie_id)
@@ -115,7 +115,7 @@ def retrieve_aRate(movie_id):
 
 @movies_blueprint.route('/movies/<movie_id>/ratings', methods = ['POST'])
 @login_required
-def submint_rate(movie_id):
+def submit_rate(movie_id):
 
     movie = Movie.query.get(movie_id)
 
