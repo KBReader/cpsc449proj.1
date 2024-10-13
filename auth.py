@@ -128,5 +128,6 @@ def login_required(f):
             return jsonify({"message": "Invalid token"}), 401
 
         # Pass the decoded user info to the route function
-        return f(decoded, *args, **kwargs)
+        kwargs['user_token'] = decoded
+        return f(*args, **kwargs)
     return decorated_function
