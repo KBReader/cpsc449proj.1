@@ -1,6 +1,7 @@
 import os
 
-from flask import Blueprint, Flask, jsonify, request
+import jwt
+from flask import Blueprint, Flask, jsonify, request, current_app
 
 from auth import admin_required, login_required
 from models import Movie, Rating, User, db
@@ -117,6 +118,15 @@ def retrieve_aRate(movie_id):
 @login_required
 def submit_rate(movie_id):
 
+    token = request.headers.get('Authorization')
+    # token validation and error catching was handled by @login_required
+    token = token.split(" ")[1]
+    decoded = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+
+    user = User.query.filter_by(username=decoded['username']).first()
+    if user.admin == True:
+        return jsonify({'message': 'Admins are not allowed to post ratings'}), 401
+    
     movie = Movie.query.get(movie_id)
 
     if not movie:
@@ -127,13 +137,13 @@ def submit_rate(movie_id):
     comment = data.get('comment')
 
     if score is None or not (1 <= score <= 10):
-        return jsonify({'message': 'Invalid score: must be between 1 to 10'}), 400
-
+        return jsonify({'message': 'Invalid score: must be between 1 to 10'}), 400    
+    
     rating = Rating(
         score = score,
         comment = comment,
         movie_id = movie_id,
-        #user_id = current_user.id
+        user_id = user.id
     )
  
     db.session.add(rating)
