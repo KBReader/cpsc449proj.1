@@ -21,11 +21,19 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     admin: Mapped[bool] = mapped_column(db.Boolean, default=False)
 
+    ratings = relationship('Rating', back_populates='user')
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "username": self.username
+        }
 
 class Movie(db.Model):
     __tablename__ = 'movies'
@@ -34,6 +42,13 @@ class Movie(db.Model):
     description: Mapped[str] = mapped_column(db.Text, nullable=True)
 
     ratings = relationship('Rating', back_populates='movie')
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description
+        }
 
 class Rating(db.Model):
     __tablename__ = 'ratings'
@@ -48,6 +63,13 @@ class Rating(db.Model):
     user = relationship('User', back_populates='ratings')
     movie = relationship('Movie', back_populates='ratings')
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "score": self.score,
+            "comment": self.comment
+        }
+
 class File(db.Model):
     __tablename__ = 'files'
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
@@ -57,7 +79,7 @@ class File(db.Model):
 
 # Adding a back reference to the User class for files
 User.files = relationship('File', back_populates='user')
-User.ratings = relationship('Rating', back_populates='user')
+
 
 def initialize_database(app):
     db.init_app(app)
