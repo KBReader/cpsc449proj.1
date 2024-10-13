@@ -114,23 +114,21 @@ def retrieve_aRate(movie_id):
     rating_list = [rating.to_dict() for rating in ratings]
     return jsonify(rating_list), 200
 
-@movies_blueprint.route('/movies/<movie_id>/ratings', methods = ['POST'])
+@movies_blueprint.route('/movies/ratings/<movie_id>', methods = ['POST'])
 @login_required
-def submit_rate(movie_id):
+def submit_rate(movie_id, user_token):
 
-    token = request.headers.get('Authorization')
-    # token validation and error catching was handled by @login_required
-    token = token.split(" ")[1]
-    decoded = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
-
-    user = User.query.filter_by(username=decoded['username']).first()
+    user = User.query.filter_by(username=user_token['username']).first()
     if user.admin == True:
         return jsonify({'message': 'Admins are not allowed to post ratings'}), 401
     
-    movie = Movie.query.get(movie_id)
-
+    movie = Movie.query.filter_by(id=movie_id).first()
     if not movie:
         return jsonify({'message': 'The movie is not found'}), 404
+    
+    rating = Rating.query.filter_by(movie_id=movie_id, user_id=user.id).first()
+    if rating:
+        return jsonify({"message": "Rating already exists"}), 400
     
     data = request.get_json()
     score = data.get('score')
@@ -149,7 +147,7 @@ def submit_rate(movie_id):
     db.session.add(rating)
     db.session.commit()
 
-    return jsonify({'message': 'Rating posted successfully','rating': rating.to_dict()}), 201
+    return jsonify({'message': 'Rating posted successfully','rating': [rating.score, rating.comment, rating.movie_id, rating.user_id]}), 201
 
 UPLOAD_FOLDER = './uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
