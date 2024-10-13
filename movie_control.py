@@ -18,6 +18,8 @@ def add_movie():
     title = data.get('title')
     description = data.get('description')
 
+    if title == None:
+        return jsonify({'message': 'Title is missing'}), 412
 
     if Movie.query.filter_by(title=title).first():
         return jsonify({'message': 'Movie already exists'}), 409
