@@ -39,6 +39,7 @@ class Rating(db.Model):
     __tablename__ = 'ratings'
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     score: Mapped[int] = mapped_column(db.Integer, nullable=False)
+    comment: Mapped[str] = mapped_column(db.Text, nullable=True)
     
     # Foreign keys for relationships
     user_id: Mapped[int] = mapped_column(db.Integer, db.ForeignKey('users.id'), nullable=False)
