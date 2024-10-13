@@ -72,13 +72,19 @@ def delete_rating(rating_id, user_id):
     db.session.commit()
     return jsonify({'message': 'Rating ID deleted succesfully'}), 200
 
-# retrieves all ratings from all users
+# retrieves all ratings from all movies
 @movies_blueprint.route('/ratings', methods =['GET'])
 @login_required
-def fetchall_ratings():
-    ratings = db.session.scalars(db.select(Rating)).all() #does .fetchall or .all works?
-    rating_list = [rating.to_dict() for rating in ratings]
-    return jsonify(rating_list)
+def fetchall_ratings(user_token):
+    movies = db.session.scalars(db.select(Movie)).fetchall()
+    ratings_dict = {}
+    for movie in movies:
+        ratings_dict[movie.title] = []
+        ratings = Rating.query.filter_by(movie_id=movie.id)
+        for rating in ratings:
+            ratings_dict[movie.title].append(rating.to_dict())
+
+    return jsonify(ratings_dict)
 
 @movies_blueprint.route('/ratings/<rating_id>', methods =['PUT'])
 @login_required
@@ -130,7 +136,7 @@ def submit_rate(movie_id, user_token):
     
     rating = Rating.query.filter_by(movie_id=movie_id, user_id=user.id).first()
     if rating:
-        return jsonify({"message": "Rating already exists"}), 400
+        return jsonify({"message": "Rating already exists"}), 409
     
     data = request.get_json()
     score = data.get('score')
