@@ -155,7 +155,7 @@ def submit_rate(movie_id, user_token):
     db.session.add(rating)
     db.session.commit()
 
-    return jsonify({'message': 'Rating posted successfully','rating': [rating.score, rating.comment, rating.movie_id, rating.user_id]}), 201
+    return jsonify({'message': 'Rating posted successfully','rating': rating.to_dict()}), 201
 
 UPLOAD_FOLDER = './uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
