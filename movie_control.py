@@ -30,15 +30,15 @@ def add_movie():
 
     return jsonify({'message': 'Movie added successfully'}), 201
 
-# Admin can delete movie from database DELETE ME DELETE ME DELETE ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@movies_blueprint.route('/movies/<movie_id>', methods=['DELETE']) #technically not a required api
+# Admin can delete movie's ratings from database
+@movies_blueprint.route('/movies/ratings/<movie_id>', methods=['DELETE'])
 @admin_required
-def delete_movie(movie_id):
-    movie = Movie.query.get(movie_id)
-    if not movie:
-        return jsonify({'message': 'Movie ID not found'}), 404
+def delete_movie_ratings(movie_id):
+    ratings = Rating.query.filter_by(movie_id=movie_id)
+    
+    for rating in ratings:
+        db.session.delete(rating)
 
-    db.session.delete(movie)
     db.session.commit()
 
     return jsonify({'message': 'Movie ID deleted successfully'}), 200
