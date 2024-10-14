@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 from flask import Flask
 
@@ -13,8 +15,10 @@ app.config['SECRET_KEY'] = os.urandom(12)
 # Enviornmental Variable for password at the end
 # set DB_PASSWORD=1234 in cmd
 # password = os.getenv("DB_PASSWORD")
-# Replace app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql+psycopg2://postgres:password@localhost/postgres"
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql+psycopg2://postgres:1234@localhost/postgres"
+
+# Create an .env file
+# Include in .env: "SQLALCHEMY_DATABASE_URI" = "postgresql+psycopg2://postgres:1234@localhost/postgres"
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
 
 # Disables SQLAlchemy tracking (Reduces memory usage & improves performance)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
