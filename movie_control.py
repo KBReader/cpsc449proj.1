@@ -1,7 +1,6 @@
 import os
 
-import jwt
-from flask import Blueprint, Flask, jsonify, request, current_app
+from flask import Blueprint, Flask, jsonify, request
 
 from auth import admin_required, login_required
 from models import Movie, Rating, User, db
@@ -11,6 +10,7 @@ app.debug = True
 
 movies_blueprint = Blueprint('movies', __name__)  # Define a Blueprint for movies
 
+# Admin can post new movie to database
 @movies_blueprint.route('/movies', methods=['POST'])
 @admin_required
 def add_movie():
@@ -29,7 +29,8 @@ def add_movie():
     db.session.commit()
 
     return jsonify({'message': 'Movie added successfully'}), 201
-    
+
+# Admin can delete movie from database DELETE ME DELETE ME DELETE ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @movies_blueprint.route('/movies/<movie_id>', methods=['DELETE']) #technically not a required api
 @admin_required
 def delete_movie(movie_id):
@@ -42,19 +43,7 @@ def delete_movie(movie_id):
 
     return jsonify({'message': 'Movie ID deleted successfully'}), 200
 
-
-# @movies_blueprint.route('/admin/ratings/<rating_id>', methods=['DELETE'])
-# @admin_required
-# def delete_rating(rating_id):
-#     rating = Rating.query.get(rating_id)
-#     if not rating:
-#         return jsonify({'message': 'Rating ID not found'}), 404
-    
-#     db.session.delete(rating)
-#     db.session.commit()
-    
-#     return jsonify({'message': 'Rating ID deleted succesfully'}), 200
-
+# Delete user's own rating
 @movies_blueprint.route('/ratings/<rating_id>', methods=['DELETE'])
 @login_required
 def delete_rating(rating_id, user_id):
@@ -72,7 +61,7 @@ def delete_rating(rating_id, user_id):
     db.session.commit()
     return jsonify({'message': 'Rating ID deleted succesfully'}), 200
 
-# retrieves all ratings from all movies
+# Get all ratings from all movies
 @movies_blueprint.route('/ratings', methods =['GET'])
 @login_required
 def fetchall_ratings(user_token):
@@ -86,29 +75,38 @@ def fetchall_ratings(user_token):
 
     return jsonify(ratings_dict), 200
 
+# Update user rating
 @movies_blueprint.route('/ratings/<rating_id>', methods =['PUT'])
 @login_required
-def update_rating(rating_id):
+def update_rating(rating_id, user_token):
 
+    user = User.query.filter_by(username=user_token['username']).first()
     rating = Rating.query.get(rating_id)
-    #user_id = user.id
 
     if not rating:
         return jsonify ({'message': 'Rating ID not found'}), 404
     
-    if rating.user_id != user_id:
-        return jsonify({'message': 'The rating ID is not posted by you'}), 403
+    if rating.user_id != user.id:
+        return jsonify({'message': 'The rating with this ID was not posted by you'}), 403
 
-    data = request.get_json()
-    new_draft = jsonify('draft')
-
-    if new_draft is None:
-        return jsonify({'message': 'There is nothing in your rating'}), 400
+    data = request.get_json() 
+    score = data.get('score')
+    comment = data.get('comment')
+    if score is None and comment is None:
+        return jsonify({'message': 'No valid data in has been passed to update rating'}), 400
     
-    rating.draft = new_draft #key to updating
-    db.session.commit()
-    return jsonify({'message': 'Rating ID has been updated'}), 200
+    if score is not None:
+        if score < 1 or score > 10:
+            return jsonify({'message': 'Invalid score: must be between 1 to 10'}), 400
+        rating.score = score
+    
+    if comment is not None:
+        rating.comment = comment
 
+    db.session.commit()
+    return jsonify({'message': 'Rating ID has been updated'}), 201
+
+# Get movie information including ratings
 @movies_blueprint.route('/movies/ratings/<movie_id>', methods = ['GET'])
 @login_required
 def retrieve_aRate(movie_id, user_token):
@@ -122,6 +120,7 @@ def retrieve_aRate(movie_id, user_token):
     rating_list = [rating.to_dict() for rating in ratings]
     return jsonify({movie.title: rating_list}), 200
 
+# Post a user rating for a movie
 @movies_blueprint.route('/movies/ratings/<movie_id>', methods = ['POST'])
 @login_required
 def submit_rate(movie_id, user_token):
