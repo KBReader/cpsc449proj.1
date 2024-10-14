@@ -46,16 +46,16 @@ def delete_movie(movie_id):
 # Delete user's own rating
 @movies_blueprint.route('/ratings/<rating_id>', methods=['DELETE'])
 @login_required
-def delete_rating(rating_id, user_id):
+def delete_rating(rating_id, user_token):
     rating = Rating.query.get(rating_id)
-    user = User.query.get(user_id)
+    user = User.query.filter_by(username=user_token['username']).first()
 
     if not rating:
         return jsonify({'message': 'Rating ID not found'}), 404
     
     #make sure if the rating belongs to the current user
-    if rating.user_id != user_id:
-        return jsonify({'message': 'The rating ID is not posted by you'}), 403
+    if rating.user_id != user.id:
+        return jsonify({'message': 'The rating with this ID was not posted by you'}), 403
     
     db.session.delete(rating)
     db.session.commit()
