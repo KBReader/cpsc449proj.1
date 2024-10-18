@@ -1,6 +1,8 @@
 # cpsc449proj.1
 
-Kevin Byon     887345262      kbyon@csu.fullerton.edu 
+Kevin Byon     CWID: 887345262      
+
+email: kbyon@csu.fullerton.edu 
 
 
 Johnny Quach     JqJohnny@csu.fullerton.edu
