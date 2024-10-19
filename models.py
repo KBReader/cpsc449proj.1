@@ -1,91 +1,49 @@
-# This file handles creating the database tables with their relationships.
-# Also includes password hashing.
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
-
-app = Flask(__name__)
-
-# Parent/Base class for the models
-class Base(DeclarativeBase):
-  pass
-
-# Initalize and setup connection to database
-db = SQLAlchemy()
+from extensions import db
 
 class User(db.Model):
     __tablename__ = 'users'
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
-    username: Mapped[str] = mapped_column(db.String, unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-    admin: Mapped[bool] = mapped_column(db.Boolean, default=False)
 
-    ratings = relationship('Rating', back_populates='user')
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password_hash = db.Column(db.Text, nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+    ratings = db.relationship('Rating', backref='user', lazy=True)
+    uploaded_files = db.relationship('UploadedFile', backref='user', lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-    
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "username": self.username
-        }
 
 class Movie(db.Model):
     __tablename__ = 'movies'
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
-    title: Mapped[str] = mapped_column(db.String, nullable=False)
-    description: Mapped[str] = mapped_column(db.Text, nullable=True)
 
-    ratings = relationship('Rating', back_populates='movie')
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), unique=True, nullable=False)
+    overview = db.Column(db.Text, nullable=True)
+    poster_path = db.Column(db.String(500), nullable=True)  # URL to the movie poster image
+    release_date = db.Column(db.String(100), nullable=True)  # Storing as string; consider datetime if needed
+    vote_average = db.Column(db.Float, nullable=True)  # Average rating on TMDB
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "title": self.title,
-            "description": self.description
-        }
+    ratings = db.relationship('Rating', backref='movie', lazy=True)
 
 class Rating(db.Model):
     __tablename__ = 'ratings'
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
-    score: Mapped[int] = mapped_column(db.Integer, nullable=False)
-    comment: Mapped[str] = mapped_column(db.Text, nullable=True)
-    
-    # Foreign keys for relationships
-    user_id: Mapped[int] = mapped_column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    movie_id: Mapped[int] = mapped_column(db.Integer, db.ForeignKey('movies.id'), nullable=False)
-    
-    user = relationship('User', back_populates='ratings')
-    movie = relationship('Movie', back_populates='ratings')
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "score": self.score,
-            "comment": self.comment
-        }
+    id = db.Column(db.Integer, primary_key=True)
+    rating = db.Column(db.Integer, nullable=False)  # Assume rating is between 1 and 5
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    movie_id = db.Column(db.Integer, db.ForeignKey('movies.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-class File(db.Model):
-    __tablename__ = 'files'
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
-    filename: Mapped[str] = mapped_column(db.String, nullable=False)
-    user_id: Mapped[int] = mapped_column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    user = relationship('User', back_populates='files')
+class UploadedFile(db.Model):
+    __tablename__ = 'uploaded_files'
 
-# Adding a back reference to the User class for files
-User.files = relationship('File', back_populates='user')
-
-
-def initialize_database(app):
-    db.init_app(app)
-
-    with app.app_context():
-        db.create_all()
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    filepath = db.Column(db.String(255), nullable=False)
+    upload_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
