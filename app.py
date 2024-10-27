@@ -109,13 +109,21 @@ def add_movie():
     """Admin adds a new movie to the database."""
     data = request.get_json()
     title = data.get('title')
+    overview = data.get('overview')
+    release_date = data.get('release_date')
+    poster_path = data.get('poster_path')
+    vote_average = data.get('vote_average')
 
     # Check if movie already exists
     if Movie.query.filter_by(title=title).first():
         return jsonify({'message': 'Movie already exists'}), 409
 
     # Add new movie
-    new_movie = Movie(title=title)
+    new_movie = Movie(title=title,
+                     overview=overview,
+                     release_date=release_date,
+                     poster_path=poster_path,
+                     vote_average=vote_average)
     db.session.add(new_movie)
     db.session.commit()
 
